@@ -29,7 +29,8 @@ final class StreamingAudioConverterTests: XCTestCase {
         // a slow ASR call before the next queued buffer is consumed.
         try await Task.sleep(for: .milliseconds(3100))
         let delayed = try XCTUnwrap(converter.extractSamples(tone(rate: 48_000)))
-        XCTAssertEqual(first.count, delayed.count)
+        // AVAudioConverter can withhold a few priming frames on its first call.
+        XCTAssertEqual(Double(first.count), Double(delayed.count), accuracy: 32)
         let risingCrossings = zip(delayed, delayed.dropFirst()).filter { $0.0 <= 0 && $0.1 > 0 }.count
         XCTAssertEqual(Double(risingCrossings), 440, accuracy: 2)
     }
